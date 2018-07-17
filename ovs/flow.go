@@ -339,6 +339,14 @@ func (f *Flow) MatchFlow() *MatchFlow {
 	}
 }
 
+// MatchFlowStrict converts Flow into a strict-matching-aware MatchFlow
+func (f *Flow) MatchFlowStrict() *MatchFlow {
+	mf := f.MatchFlow()
+	mf.Priority = f.Priority
+	mf.Strict = true
+	return mf
+}
+
 // marshalActions marshals all Actions in a Flow to their text form.
 func (f *Flow) marshalActions() ([]string, error) {
 	fns := make([]func() ([]byte, error), 0, len(f.Actions))
