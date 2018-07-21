@@ -248,6 +248,43 @@ func (m *networkMatch) GoString() string {
 	return fmt.Sprintf("ovs.NetworkDestination(%q)", m.ip)
 }
 
+type regMatch struct {
+	n    int
+	val  uint32
+	mask uint32
+}
+
+// RegMatch matches flows' associated register fields
+func RegMatch(n int, val, mask uint32) Match {
+	return &regMatch{
+		n:    n,
+		val:  val,
+		mask: mask,
+	}
+}
+
+// MarshalText implements Match.
+func (m *regMatch) MarshalText() ([]byte, error) {
+	if m.mask == 0 {
+		return []byte{}, nil
+	} else {
+		valstr := "0"
+		if m.val != 0 {
+			valstr = fmt.Sprintf("0x%x", m.val)
+		}
+		if m.mask == ^uint32(0) {
+			return bprintf("reg%d=%s", m.n, valstr), nil
+		} else {
+			return bprintf("reg%d=%s/0x%x", m.n, valstr, m.mask), nil
+		}
+	}
+}
+
+// GoString implements Match.
+func (m *regMatch) GoString() string {
+	return fmt.Sprintf("ovs.RegMatch(%q, %q, %q)", m.n, m.val, m.mask)
+}
+
 // ConjunctionID matches flows that have matched all dimension of a conjunction
 // inside of the openflow table.
 func ConjunctionID(id uint32) Match {

@@ -908,6 +908,63 @@ func TestMatchTunnelID(t *testing.T) {
 	}
 }
 
+func TestMatchReg(t *testing.T) {
+	var tests = []struct {
+		desc string
+		m    Match
+		out  string
+	}{
+		{
+			desc: "zero value",
+			m:    RegMatch(0, 0, 0xffffffff),
+			out:  "reg0=0",
+		},
+		{
+			desc: "non-zero value",
+			m:    RegMatch(0, 0x64, ^uint32(0)),
+			out:  "reg0=0x64",
+		},
+		{
+			desc: "zero mask",
+			m:    RegMatch(0, 0x64, 0),
+			out:  "",
+		},
+		{
+			desc: "non-zero with mask",
+			m:    RegMatch(0, 0x64, 0xffe),
+			out:  "reg0=0x64/0xffe",
+		},
+		{
+			desc: "non-zero with full mask",
+			m:    RegMatch(0, 0x64, ^uint32(0)),
+			out:  "reg0=0x64",
+		},
+		{
+			desc: "zero with mask",
+			m:    RegMatch(0, 0, 0x1),
+			out:  "reg0=0/0x1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			out, err := tt.m.MarshalText()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			want, got := tt.out, string(out)
+			if want != got {
+				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
+					want, got)
+			}
+			if len(tt.out) > 0 {
+				mustFieldNameCorrect(t, tt.m, got)
+			}
+		})
+	}
+}
+
 func TestMatchGoString(t *testing.T) {
 	var tests = []struct {
 		m Match

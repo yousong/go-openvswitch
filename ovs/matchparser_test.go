@@ -345,6 +345,33 @@ func Test_parseMatch(t *testing.T) {
 			s:       "tp_src=0xea60/0xffe0/0xdddd",
 			invalid: true,
 		},
+		{
+			desc: "reg0=0",
+			s:    "reg0=0",
+			m:    RegMatch(0, 0, ^uint32(0)),
+		},
+		{
+			desc: "reg0=0x64",
+			s:    "reg0=0x64",
+			m:    RegMatch(0, 0x64, ^uint32(0)),
+		},
+		{
+			desc: "reg0=0x64/0xffe",
+			s:    "reg0=0x64/0xffe",
+			m:    RegMatch(0, 0x64, 0xffe),
+		},
+		{
+			desc:  "reg0=0x64/0xffffffff",
+			s:     "reg0=0x64/0xffffffff",
+			final: "reg0=0x64",
+			m:     RegMatch(0, 0x64, ^uint32(0)),
+		},
+		{
+			desc:  "reg0=0/0x1",
+			s:     "reg0=0x0/0x1",
+			final: "reg0=0/0x1",
+			m:     RegMatch(0, 0, 0x1),
+		},
 	}
 
 	for _, tt := range tests {
