@@ -76,7 +76,46 @@ func parseMatch(key string, value string) (Match, error) {
 		return parseTunID(value)
 	}
 
+	if strings.HasPrefix(key, "reg") {
+		return parseRegMatch(key, value)
+	}
+
 	return nil, fmt.Errorf("no match parser found for %s=%s", key, value)
+}
+
+func parseRegMatch(key, value string) (Match, error) {
+	n, err := strconv.Atoi(key[3:])
+	if err != nil {
+		return nil, err
+	}
+	values := []uint32{}
+	for _, s := range strings.Split(value, "/") {
+		if !strings.HasPrefix(s, hexPrefix) {
+			v, err := strconv.Atoi(s)
+			if err != nil {
+				return nil, err
+			}
+
+			values = append(values, uint32(v))
+			continue
+		}
+
+		v, err := parseHexUint32(s)
+		if err != nil {
+			return nil, err
+		}
+
+		values = append(values, v)
+	}
+	switch len(values) {
+	case 1:
+		return RegMatch(n, values[0], ^uint32(0)), nil
+	case 2:
+		return RegMatch(n, values[0], values[1]), nil
+	// Match had too many parts, e.g. "vlan_tci=10/10/10"
+	default:
+		return nil, fmt.Errorf("invalid reg%d match: %q", n, value)
+	}
 }
 
 // parseClampInt calls strconv.Atoi on s, and then ensures that s is less than
