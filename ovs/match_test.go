@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -97,9 +98,13 @@ func TestMatchDataLink(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
+			}
+			if !tt.invalid {
+				mustFieldNameCorrect(t, tt.m, got)
 			}
 		})
 	}
@@ -125,15 +130,18 @@ func TestMatchDataLinkType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			out, err := DataLinkType(tt.etherType).MarshalText()
+			m := DataLinkType(tt.etherType)
+			out, err := m.MarshalText()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, m, got)
 		})
 	}
 }
@@ -169,14 +177,19 @@ func TestMatchDataLinkVLAN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			out, err := DataLinkVLAN(tt.vlan).MarshalText()
+			m := DataLinkVLAN(tt.vlan)
+			out, err := m.MarshalText()
 			if err != nil && !tt.invalid {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
+			}
+			if !tt.invalid {
+				mustFieldNameCorrect(t, m, got)
 			}
 		})
 	}
@@ -298,9 +311,13 @@ func TestMatchIPv4AddressOrCIDR(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
+			}
+			if !tt.invalid {
+				mustFieldNameCorrect(t, tt.m, got)
 			}
 		})
 	}
@@ -402,9 +419,13 @@ func TestMatchIPv6AddressOrCIDR(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
+			}
+			if !tt.invalid {
+				mustFieldNameCorrect(t, tt.m, got)
 			}
 		})
 	}
@@ -435,15 +456,18 @@ func TestMatchICMPType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			out, err := ICMPType(tt.typ).MarshalText()
+			m := ICMPType(tt.typ)
+			out, err := m.MarshalText()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, m, got)
 		})
 	}
 }
@@ -473,15 +497,18 @@ func TestMatchNetworkProtocol(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			out, err := NetworkProtocol(tt.num).MarshalText()
+			m := NetworkProtocol(tt.num)
+			out, err := m.MarshalText()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, m, got)
 		})
 	}
 }
@@ -506,15 +533,18 @@ func TestMatchConjunctionID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			out, err := ConjunctionID(tt.num).MarshalText()
+			m := ConjunctionID(tt.num)
+			out, err := m.MarshalText()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, m, got)
 		})
 	}
 }
@@ -549,10 +579,12 @@ func TestMatchConnectionTrackingState(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -587,10 +619,12 @@ func TestMatchTCPFlags(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -651,9 +685,13 @@ func TestMatchEthernetHardwareAddress(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
+			}
+			if !tt.invalid {
+				mustFieldNameCorrect(t, tt.m, got)
 			}
 		})
 	}
@@ -703,11 +741,12 @@ func TestMatchTransport(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -788,11 +827,12 @@ func TestMatchVLANTCI(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -821,11 +861,12 @@ func TestMatchConnectionTrackingMark(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -849,11 +890,12 @@ func TestMatchConnectionTrackingZone(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -899,11 +941,12 @@ func TestMatchTunnelID(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if want, got := tt.out, string(out); want != got {
+			want, got := tt.out, string(out)
+			if want != got {
 				t.Fatalf("unexpected Match output:\n- want: %q\n-  got: %q",
 					want, got)
 			}
+			mustFieldNameCorrect(t, tt.m, got)
 		})
 	}
 }
@@ -1112,4 +1155,16 @@ func mustParseMAC(addr string) net.HardwareAddr {
 	}
 
 	return mac
+}
+
+func mustFieldNameCorrect(t *testing.T, m Match, got string) {
+	if !strings.HasPrefix(got, m.Field()+"=") {
+		gotField := got
+		i := strings.Index(got, "=")
+		if i > 0 {
+			gotField = got[:i]
+		}
+		t.Fatalf("unexpected Match field:\n- want: %q\n-  got: %q",
+			m.Field(), gotField)
+	}
 }

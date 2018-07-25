@@ -71,6 +71,7 @@ const (
 type Match interface {
 	encoding.TextMarshaler
 	fmt.GoStringer
+	Field() string
 }
 
 // DataLinkSource matches packets with a source hardware address and optional
@@ -102,6 +103,11 @@ var _ Match = &dataLinkMatch{}
 type dataLinkMatch struct {
 	srcdst string
 	addr   string
+}
+
+// Field implements Match.
+func (m *dataLinkMatch) Field() string {
+	return "dl_" + m.srcdst
 }
 
 // GoString implements Match.
@@ -168,6 +174,11 @@ func (m *dataLinkTypeMatch) GoString() string {
 	return fmt.Sprintf("ovs.DataLinkType(0x%04x)", m.etherType)
 }
 
+// Field implements Match.
+func (m *dataLinkTypeMatch) Field() string {
+	return dlType
+}
+
 // VLANNone is a special value which indicates that DataLinkVLAN should only
 // match packets with no VLAN tag specified.
 const VLANNone = 0xffff
@@ -184,6 +195,11 @@ var _ Match = &dataLinkVLANMatch{}
 // A dataLinkVLANMatch is a Match returned by DataLinkVLAN.
 type dataLinkVLANMatch struct {
 	vid int
+}
+
+// Field implements Match.
+func (m *dataLinkVLANMatch) Field() string {
+	return dlVLAN
 }
 
 // MarshalText implements Match.
@@ -234,6 +250,11 @@ type networkMatch struct {
 	ip     string
 }
 
+// Field implements Match.
+func (m *networkMatch) Field() string {
+	return "nw_" + m.srcdst
+}
+
 // MarshalText implements Match.
 func (m *networkMatch) MarshalText() ([]byte, error) {
 	return matchIPv4AddressOrCIDR(fmt.Sprintf("nw_%s", m.srcdst), m.ip)
@@ -261,6 +282,11 @@ func RegMatch(n int, val, mask uint32) Match {
 		val:  val,
 		mask: mask,
 	}
+}
+
+// Field implements Match.
+func (m *regMatch) Field() string {
+	return fmt.Sprintf("reg%d", m.n)
 }
 
 // MarshalText implements Match.
@@ -308,6 +334,11 @@ func (m *conjunctionIDMatch) GoString() string {
 	return fmt.Sprintf("ovs.ConjunctionID(%v)", m.id)
 }
 
+// Field implements Match.
+func (m *conjunctionIDMatch) Field() string {
+	return "conj_id"
+}
+
 // NetworkProtocol matches packets with the specified IP or IPv6 protocol
 // number matching num.  For example, specifying 1 when a Flow's Protocol
 // is IPv4 matches ICMP packets, or 58 when Protocol is IPv6 matches ICMPv6
@@ -333,6 +364,11 @@ func (m *networkProtocolMatch) MarshalText() ([]byte, error) {
 // GoString implements Match.
 func (m *networkProtocolMatch) GoString() string {
 	return fmt.Sprintf("ovs.NetworkProtocol(%d)", m.num)
+}
+
+// Field implements Match.
+func (m *networkProtocolMatch) Field() string {
+	return nwProto
 }
 
 // IPv6Source matches packets with a source IPv6 address or IPv6 CIDR
@@ -375,6 +411,11 @@ func (m *ipv6Match) GoString() string {
 	return fmt.Sprintf("ovs.IPv6Destination(%q)", m.ip)
 }
 
+// Field implements Match.
+func (m *ipv6Match) Field() string {
+	return "ipv6_" + m.srcdst
+}
+
 // ICMPType matches packets with the specified ICMP type matching typ.
 func ICMPType(typ uint8) Match {
 	return &icmpTypeMatch{
@@ -397,6 +438,11 @@ func (m *icmpTypeMatch) MarshalText() ([]byte, error) {
 // GoString implements Match.
 func (m *icmpTypeMatch) GoString() string {
 	return fmt.Sprintf("ovs.ICMPType(%d)", m.typ)
+}
+
+// Field implements Match.
+func (m *icmpTypeMatch) Field() string {
+	return icmpType
 }
 
 // NeighborDiscoveryTarget matches packets with an IPv6 neighbor discovery target
@@ -422,6 +468,11 @@ func (m *neighborDiscoveryTargetMatch) MarshalText() ([]byte, error) {
 // GoString implements Match.
 func (m *neighborDiscoveryTargetMatch) GoString() string {
 	return fmt.Sprintf("ovs.NeighborDiscoveryTarget(%q)", m.ip)
+}
+
+// Field implements Match.
+func (m *neighborDiscoveryTargetMatch) Field() string {
+	return ndTarget
 }
 
 // NeighborDiscoverySourceLinkLayer matches packets with an IPv6 neighbor
@@ -470,6 +521,14 @@ func (m *neighborDiscoveryLinkLayerMatch) GoString() string {
 	return fmt.Sprintf("ovs.NeighborDiscoveryTargetLinkLayer(%s)", syntax)
 }
 
+// Field implements Match.
+func (m *neighborDiscoveryLinkLayerMatch) Field() string {
+	if m.srctgt == source {
+		return ndSLL
+	}
+	return ndTLL
+}
+
 // ARPSourceHardwareAddress matches packets with an ARP source hardware address
 // (SHA) matching addr.
 func ARPSourceHardwareAddress(addr net.HardwareAddr) Match {
@@ -516,6 +575,14 @@ func (m *arpHardwareAddressMatch) GoString() string {
 	return fmt.Sprintf("ovs.ARPTargetHardwareAddress(%s)", syntax)
 }
 
+// Field implements Match.
+func (m *arpHardwareAddressMatch) Field() string {
+	if m.srctgt == source {
+		return arpSHA
+	}
+	return arpTHA
+}
+
 // ARPSourceProtocolAddress matches packets with an ARP source protocol address
 // (SPA) IPv4 address or IPv4 CIDR block matching addr.
 func ARPSourceProtocolAddress(ip string) Match {
@@ -558,6 +625,14 @@ func (m *arpProtocolAddressMatch) GoString() string {
 	}
 
 	return fmt.Sprintf("ovs.ARPTargetProtocolAddress(%q)", m.ip)
+}
+
+// Field implements Match.
+func (m *arpProtocolAddressMatch) Field() string {
+	if m.srctgt == source {
+		return arpSPA
+	}
+	return arpTPA
 }
 
 // TransportSourcePort matches packets with a transport layer (TCP/UDP) source
@@ -687,6 +762,11 @@ func (m *transportPortMatch) GoString() string {
 	return fmt.Sprintf("ovs.TransportDestinationPort(%d)", m.port)
 }
 
+// Field implements Match.
+func (m *transportPortMatch) Field() string {
+	return "tp_" + m.srcdst
+}
+
 // A vlanTCIMatch is a Match returned by VLANTCI.
 type vlanTCIMatch struct {
 	tci  uint16
@@ -714,6 +794,11 @@ func (m *vlanTCIMatch) MarshalText() ([]byte, error) {
 // GoString implements Match.
 func (m *vlanTCIMatch) GoString() string {
 	return fmt.Sprintf("ovs.VLANTCI(0x%04x, 0x%04x)", m.tci, m.mask)
+}
+
+// Field implements Match.
+func (m *vlanTCIMatch) Field() string {
+	return vlanTCI
 }
 
 // A connectionTrackingMarkMatch is a Match returned by ConnectionTrackingMark.
@@ -744,6 +829,11 @@ func (m *connectionTrackingMarkMatch) GoString() string {
 	return fmt.Sprintf("ovs.ConnectionTrackingMark(0x%08x, 0x%08x)", m.mark, m.mask)
 }
 
+// Field implements Match.
+func (m *connectionTrackingMarkMatch) Field() string {
+	return ctMark
+}
+
 // A connectionTrackingZoneMatch is a Match returned by ConnectionTrackingZone.
 type connectionTrackingZoneMatch struct {
 	zone uint16
@@ -764,6 +854,11 @@ func (m *connectionTrackingZoneMatch) MarshalText() ([]byte, error) {
 // GoString implements Match.
 func (m *connectionTrackingZoneMatch) GoString() string {
 	return fmt.Sprintf("ovs.ConnectionTrackingZone(%d)", m.zone)
+}
+
+// Field implements Match.
+func (m *connectionTrackingZoneMatch) Field() string {
+	return ctZone
 }
 
 // ConnectionTrackingState matches packets using their connection state, when
@@ -799,6 +894,11 @@ func (m *connectionTrackingMatch) GoString() string {
 	}
 
 	return fmt.Sprintf("ovs.ConnectionTrackingState(%s)", buf.String())
+}
+
+// Field implements Match.
+func (m *connectionTrackingMatch) Field() string {
+	return ctState
 }
 
 // CTState is a connection tracking state, which can be used with the
@@ -863,6 +963,11 @@ func (m *tcpFlagsMatch) GoString() string {
 	return fmt.Sprintf("ovs.TCPFlags(%s)", buf.String())
 }
 
+// Field implements Match.
+func (m *tcpFlagsMatch) Field() string {
+	return tcpFlags
+}
+
 // TCPFlag represents a flag in the TCP header, which can be used with the
 // TCPFlags function.
 type TCPFlag string
@@ -920,6 +1025,11 @@ func (m *tunnelIDMatch) GoString() string {
 	}
 
 	return fmt.Sprintf("ovs.TunnelID(%#x)", m.id)
+}
+
+// Field implements Match.
+func (m *tunnelIDMatch) Field() string {
+	return tunID
 }
 
 // MarshalText implements Match.
