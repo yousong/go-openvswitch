@@ -17,6 +17,7 @@ package ovs
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -345,6 +346,14 @@ func (f *Flow) MatchFlowStrict() *MatchFlow {
 	mf.Priority = f.Priority
 	mf.Strict = true
 	return mf
+}
+
+// SortMatches sorts match conditions according to their match field.  This can
+// be useful for comparing whether two flows are equal
+func (f *Flow) SortMatches() {
+	sort.Slice(f.Matches, func(i, j int) bool {
+		return f.Matches[i].Field() < f.Matches[j].Field()
+	})
 }
 
 // marshalActions marshals all Actions in a Flow to their text form.
