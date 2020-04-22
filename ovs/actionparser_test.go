@@ -282,6 +282,18 @@ func Test_parseAction(t *testing.T) {
 			a: SetField("192.168.1.1", "arp_spa"),
 		},
 		{
+			s:       "move:->arp_spa",
+			invalid: true,
+		},
+		{
+			s:       "move:reg0[0..5]−>reg1[26..31]",
+			invalid: true,
+		},
+		{
+			s: "move:NXM_OF_ETH_SRC->NXM_OF_ETH_DST",
+			a: Move("NXM_OF_ETH_SRC", "NXM_OF_ETH_DST"),
+		},
+		{
 			s: "conjunction(123,1/2)",
 			a: Conjunction(123, 1, 2),
 		},
