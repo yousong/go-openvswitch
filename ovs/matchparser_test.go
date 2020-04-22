@@ -366,6 +366,12 @@ func Test_parseMatch(t *testing.T) {
 			final: "reg0=0x64",
 			m:     RegMatch(0, 0x64, ^uint32(0)),
 		},
+		{
+			desc:  "arp_op=1",
+			s:     "arp_op=1",
+			final: "arp_op=1",
+			m:     ARPOp(1),
+		},
 	}
 
 	for _, tt := range tests {
